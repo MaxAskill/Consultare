@@ -6,7 +6,6 @@ Consultare is a task management application built with Laravel and Vue.js.
 
 - Create, read, update, and delete tasks
 - Prioritize tasks by adding new ones to the top of the list
-- User authentication and authorization
 - Responsive design using Quasar framework
 
 ## Requirements

@@ -116,7 +116,7 @@
           />
           <q-select
             v-model="editedTask.status"
-            :options="statusOptions"
+            :options="statusEditOptions"
             label="Status"
             dense
           />
@@ -148,12 +148,17 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+    <!-- Notification -->
+    <div class="notification-container">
+      <div v-if="notification" :class="['notification', notification.type]">
+        {{ notification.message }}
+      </div>
+    </div>
   </q-layout>
 </template>
 
 <script>
 import { format } from "date-fns";
-
 export default {
   data() {
     return {
@@ -183,7 +188,7 @@ export default {
         },
         { name: "actions", align: "center", label: "Actions", field: "actions" },
       ],
-      statusOptions: ["Pending", "In Progress", "Completed"],
+      statusEditOptions: ["Pending", "In Progress", "Completed"],
       addTaskModal: false,
       editTaskModal: false,
       newTask: {
@@ -201,6 +206,7 @@ export default {
       taskToDelete: null,
       statusFilter: "All",
       statusOptions: ["All", "Pending", "In Progress", "Completed"],
+      notification: null,
     };
   },
   computed: {
@@ -304,37 +310,44 @@ export default {
         this.addTaskModal = false;
 
         // Optionally, show a success message
-        this.$q.notify({
-          color: "positive",
-          message: "Task added successfully",
-          icon: "check",
-        });
+
+        this.showNotification("Task added successfully", "success");
       } catch (error) {
         console.error("Error adding task:", error);
         // Show an error message
-        this.$q.notify({
-          color: "negative",
-          message: "Failed to add task",
-          icon: "report_problem",
-        });
+
+        this.showNotification("Failed to add task", "error");
       }
     },
     /**
      * Update the task with the given ID via the API and update the rows array.
-     *
      */
     async saveEditedTask() {
       console.log(this.editedTask);
       try {
+        // Make the API call to update the task
+        const response = await axios.put(`/tasks/${this.editedTask.id}`, this.editedTask);
+        // Find the index of the task in the rows array
         const index = this.rows.findIndex((row) => row.id === this.editedTask.id);
+
         if (index !== -1) {
+          // Update the task in the rows array with the response data
           this.rows[index] = response.data;
         }
+
+        // Close the edit task modal
         this.editTaskModal = false;
+
+        // Optionally, show a success message
+        this.showNotification("Task updated successfully", "success");
       } catch (error) {
         console.error("Error updating task:", error);
+
+        // Show an error message
+        this.showNotification("Failed to update task", "error");
       }
     },
+
     /**
      * Show the delete confirmation dialog for the given task.
      *
@@ -356,20 +369,20 @@ export default {
         const index = this.rows.findIndex((r) => r.id === this.taskToDelete.id);
         if (index !== -1) {
           this.rows.splice(index, 1);
-          this.$q.notify({
-            type: "positive",
-            message: "Task deleted successfully",
-          });
+          this.showNotification("Task delete successfully", "success");
         }
       } catch (error) {
         console.error("Error deleting task:", error);
-        this.$q.notify({
-          type: "negative",
-          message: "Failed to delete task. Please try again.",
-        });
+        this.showNotification("Task delete failed", "error");
       } finally {
         this.taskToDelete = null;
       }
+    },
+    showNotification(message, type) {
+      this.notification = { message, type };
+      setTimeout(() => {
+        this.notification = null;
+      }, 3000);
     },
   },
   /**
@@ -380,3 +393,25 @@ export default {
   },
 };
 </script>
+<style scoped>
+.notification-container {
+  position: fixed;
+  top: 98px; /* Adjust this value to match your navbar height */
+  right: 20px;
+  z-index: 9999;
+}
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 10px;
+  border-radius: 4px;
+  color: white;
+}
+.success {
+  background-color: green;
+}
+.error {
+  background-color: red;
+}
+</style>

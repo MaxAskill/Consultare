@@ -293,7 +293,7 @@ export default {
      */
     async addTask() {
       try {
-        // Assuming you're using axios for API calls
+        // Make the API call to add the task
         const response = await axios.post("/tasks", this.newTask);
 
         // Add the new task to the beginning of the rows array
@@ -338,7 +338,7 @@ export default {
         // Close the edit task modal
         this.editTaskModal = false;
 
-        // Optionally, show a success message
+        // Show a success message
         this.showNotification("Task updated successfully", "success");
       } catch (error) {
         console.error("Error updating task:", error);
